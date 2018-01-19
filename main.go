@@ -72,7 +72,15 @@ func plainTextAll(imgs []docker.APIImages) error {
 	return nil
 }
 
-func checkMultiEncFlag(
+func checkMultiEncFlag(jsonFlag bool, yamlFlag bool, textFlag bool) bool {
+	if (jsonFlag && !yamlFlag && !textFlag) || (!jsonFlag && yamlFlag && !textFlag) || (!jsonFlag && !yamlFlag && textFlag) || (!jsonFlag && !yamlFlag && !textFlag) {
+		return false
+	} else {
+		return true
+	}
+}
+
+func main() {
 
 	jsonON := flag.Bool("json", false, "Use JSON encoding")
 	yamlON := flag.Bool("yaml", false, "Use YAML encondig")
@@ -85,6 +93,11 @@ func checkMultiEncFlag(
 	if *helpON {
 		printHelp()
 		os.Exit(0)
+	}
+
+	if checkMultiEncFlag(*jsonON, *yamlON, *textON) {
+		fmt.Println("Error: The program does not support more than one encoding flag")
+		os.Exit(1)
 	}
 
 	// Let's create a client instance connecting to the local socket
@@ -100,7 +113,7 @@ func checkMultiEncFlag(
 		panic(err)
 	}
 
-	if *jsonON && !*yamlON && !*textON {
+	if *jsonON {
 		// Print the conent in json format
 		res, err := jsonEnc(imgs)
 		if err != nil {
@@ -111,7 +124,7 @@ func checkMultiEncFlag(
 		os.Exit(0)
 	}
 
-	if !*jsonON && *yamlON && !*textON {
+	if *yamlON {
 		// Print the conent in json format
 		res, err := yamlEnc(imgs)
 		if err != nil {
@@ -123,7 +136,7 @@ func checkMultiEncFlag(
 	}
 
 	// We want text to be the default output format
-	if (!*jsonON && !*yamlON && *textON) || (!*jsonON && !*yamlON && !*textON) {
+	if *textON || (!*jsonON && !*yamlON && !*textON) {
 		err := plainTextAll(imgs)
 		if err != nil {
 			fmt.Println(err)
@@ -132,6 +145,4 @@ func checkMultiEncFlag(
 		os.Exit(0)
 	}
 
-	fmt.Println("Error: The program does not support more than one encoding flag")
-	os.Exit(1)
 }
