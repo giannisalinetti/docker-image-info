@@ -9,13 +9,35 @@ import (
 	"os"
 )
 
+const (
+	helpMsg = `docker_image_info - Docker Images Info tool
+
+Usage: docker_image_info [options]
+
+Options:
+`
+)
+
+// The printHelp() function will use the default helpMsg
+func printHelp() {
+	fmt.Println(helpMsg)
+	flag.PrintDefaults()
+}
+
 func main() {
 
-	jsonON := flag.Bool("json", false, "JSON encoding")
-	yamlON := flag.Bool("yaml", false, "YAML encondig")
-	textON := flag.Bool("text", false, "Simple text")
+	jsonON := flag.Bool("json", false, "Use JSON encoding")
+	yamlON := flag.Bool("yaml", false, "Use YAML encondig")
+	textON := flag.Bool("text", false, "Output the result in plain text")
+	helpON := flag.Bool("help", false, "Print a more detailed help")
 
 	flag.Parse()
+
+	// Use an extended help function for a user friendly output
+	if *helpON {
+		printHelp()
+		os.Exit(0)
+	}
 
 	// Let's create a client instance connecting to the local socket
 	endpoint := "unix:///var/run/docker.sock"
@@ -77,6 +99,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	fmt.Println("Error: Cannot use more than one encoding flag")
+	fmt.Println("Error: The program does not support more than one encoding flag")
 	os.Exit(1)
 }
