@@ -1,7 +1,6 @@
 FROM docker.io/golang
 
 WORKDIR /go/src/docker_image_info
-
 COPY . .
 
 RUN go-wrapper download
