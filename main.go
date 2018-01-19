@@ -26,7 +26,7 @@ func printHelp() {
 	flag.PrintDefaults()
 }
 
-// We print the images cycling the slice containint APIImages structs
+// We print the images cycling the slice []docker.APIImages containing APIImages structs
 //type APIImages struct {
 //ID          string            `json:"Id" yaml:"Id" toml:"Id"`
 //RepoTags    []string          `json:"RepoTags,omitempty" yaml:"RepoTags,omitempty" toml:"RepoTags,omitempty"`
@@ -86,11 +86,11 @@ func imageTimeStamp(imgs []docker.APIImages) map[string]int64 {
 	return imgTSMap
 }
 
-func checkMultiEncFlag(jsonFlag bool, yamlFlag bool, textFlag bool, imgAgeFlag bool) bool {
-	if (jsonFlag && !yamlFlag && !textFlag && !imgAgeFlag) ||
-		(!jsonFlag && yamlFlag && !textFlag && !imgAgeFlag) ||
-		(!jsonFlag && !yamlFlag && textFlag && !imgAgeFlag) ||
-		(!jsonFlag && !yamlFlag && !textFlag && imgAgeFlag) {
+func checkMultiEncFlag(jsonFlag bool, yamlFlag bool, textFlag bool) bool {
+	if (jsonFlag && !yamlFlag && !textFlag) ||
+		(!jsonFlag && yamlFlag && !textFlag) ||
+		(!jsonFlag && !yamlFlag && textFlag) ||
+		(!jsonFlag && !yamlFlag && !textFlag) {
 		return false
 	} else {
 		return true
@@ -113,7 +113,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if checkMultiEncFlag(*jsonON, *yamlON, *textON, *imgAgeON) {
+	if checkMultiEncFlag(*jsonON, *yamlON, *textON) {
 		fmt.Println("Error: The program does not support more than one encoding flag")
 		os.Exit(1)
 	}
