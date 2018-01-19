@@ -39,22 +39,28 @@ To build the standalone executable and install it under $GOPATH/bin
 $ go install
 ```
 
-To build the Docker image:
+To build the Docker image simply run:
 
 ```
-$ docker build -t docker_image_info .
+$ make
+```
+
+To build with custom arguments:
+
+```
+$ docker build -t docker-image-info .
 
 To run the docker image we need to map the /var/run directory as a container volume
 to grant access to `/var/run/docker.sock`.
 
 ```
-$ docker run -v /var/run:/var/run docker_image_info
+$ docker run -v /var/run:/var/run docker-image-info
 ```
 
 To run che container with extra flags:
 
 ```
-$ docker run -v /var/run:/var/run docker_image_info docker_image_info -yaml
+$ docker run -v /var/run:/var/run docker-image-info docker-image-info -yaml
 ```
 
 ## Authors

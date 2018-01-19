@@ -1,6 +1,6 @@
 # Makefile variables.
 # Update VERSION on new releases
-NAME=docker_image_info
+NAME=docker-image-info
 VERSION=v0.2
 
 .PHONY: all build tag_latest
