@@ -37,6 +37,7 @@ func printHelp() {
 //RepoDigests []string          `json:"RepoDigests,omitempty" yaml:"RepoDigests,omitempty" toml:"RepoDigests,omitempty"`
 //Labels      map[string]string `json:"Labels,omitempty" yaml:"Labels,omitempty" toml:"Labels,omitempty"`
 
+// Function jsonEnc() translates []docker.APIImages slice to json string
 func jsonEnc(imgs []docker.APIImages) (string, error) {
 	jsonSer, err := json.Marshal(imgs)
 	if err != nil {
@@ -46,6 +47,7 @@ func jsonEnc(imgs []docker.APIImages) (string, error) {
 	return result, nil
 }
 
+// Function yamlEnc() translates []docker.APIImages slice to yaml string
 func yamlEnc(imgs []docker.APIImages) (string, error) {
 	yamlser, err := yaml.Marshal(imgs)
 	if err != nil {
@@ -55,6 +57,28 @@ func yamlEnc(imgs []docker.APIImages) (string, error) {
 	return result, nil
 }
 
+// Function jsonAge() translates map[string]int64 map to json string
+func jsonAge(m map[string]int64) (string, error) {
+	jsonAgeMarshal, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	result := fmt.Sprintf("%s", string(jsonAgeMarshal))
+	return result, nil
+}
+
+// Function yamlAge() translates map[string]int64 map to yaml string
+func yamlAge(m map[string]int64) (string, error) {
+	yamlAgeMarshal, err := yaml.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	result := fmt.Sprintf("%s", string(yamlAgeMarshal))
+	return result, nil
+}
+
+//TODO: Convert to a map[string]string output and pass it
+// to the calling function who will print it by itself.
 func plainTextAll(imgs []docker.APIImages) error {
 	if len(imgs) == 0 {
 		return errors.New("Empty image list")
@@ -73,7 +97,7 @@ func plainTextAll(imgs []docker.APIImages) error {
 	return nil
 }
 
-// ImageTimeStamp can be useful to collect the age of old images on
+// Function imageTimeStamp() can be useful to collect the age of old images on
 // node caches.
 func imageTimeStamp(imgs []docker.APIImages) map[string]int64 {
 	imgTSMap := make(map[string]int64)
@@ -86,6 +110,7 @@ func imageTimeStamp(imgs []docker.APIImages) map[string]int64 {
 	return imgTSMap
 }
 
+// Function checkMultiEncFlag() checks if the user uses more than one encoding flag
 func checkMultiEncFlag(jsonFlag bool, yamlFlag bool, textFlag bool) bool {
 	if (jsonFlag && !yamlFlag && !textFlag) ||
 		(!jsonFlag && yamlFlag && !textFlag) ||
@@ -131,7 +156,7 @@ func main() {
 		panic(err)
 	}
 
-	if *jsonON {
+	if *jsonON && !*imgAgeON {
 		// Print the conent in json format
 		res, err := jsonEnc(imgs)
 		if err != nil {
@@ -142,7 +167,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if *yamlON {
+	if *yamlON && !*imgAgeON {
 		// Print the conent in json format
 		res, err := yamlEnc(imgs)
 		if err != nil {
@@ -154,7 +179,7 @@ func main() {
 	}
 
 	// We want text to be the default output format
-	if *textON || (!*jsonON && !*yamlON && !*textON && !*imgAgeON) {
+	if *textON && !*imgAgeON || (!*jsonON && !*yamlON && !*textON && !*imgAgeON) {
 		err := plainTextAll(imgs)
 		if err != nil {
 			fmt.Println(err)
@@ -165,9 +190,25 @@ func main() {
 
 	if *imgAgeON {
 		imgAgeMap := imageTimeStamp(imgs)
-		fmt.Printf("IMAGE ID\t\t\t\t\t\t\t  AGE\n")
-		for id, epoch := range imgAgeMap {
-			fmt.Printf("%s  %d\n", id, epoch)
+		if *textON || (!*jsonON && !*yamlON && !*textON) {
+			fmt.Printf("IMAGE ID\t\t\t\t\t\t\t  AGE\n")
+			for id, epoch := range imgAgeMap {
+				fmt.Printf("%s  %d\n", id, epoch)
+			}
+		} else if *yamlON {
+			res, err := yamlAge(imgAgeMap)
+			if err != nil {
+				fmt.Println("Yaml encoding error: %s\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("%s", res)
+		} else if *jsonON {
+			res, err := jsonAge(imgAgeMap)
+			if err != nil {
+				fmt.Println("Json encoding error: %s\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("%s", res)
 		}
 	}
 }
