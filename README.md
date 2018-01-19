@@ -49,6 +49,7 @@ To build with custom arguments:
 
 ```
 $ docker build -t docker-image-info .
+```
 
 To run the docker image we need to map the /var/run directory as a container volume
 to grant access to `/var/run/docker.sock`.
