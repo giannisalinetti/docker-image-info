@@ -128,7 +128,7 @@ func main() {
 	yamlON := flag.Bool("yaml", false, "Use YAML encondig")
 	textON := flag.Bool("text", false, "Output the result in plain text")
 	helpON := flag.Bool("help", false, "Print a more detailed help")
-	imgAgeON := flag.Bool("age", false, "Print age of images in Unix epoch")
+	imgAgeON := flag.Bool("age", false, "Print age of images in Unix epoch (text/json/yaml format)")
 
 	flag.Parse()
 
