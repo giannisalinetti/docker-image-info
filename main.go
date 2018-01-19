@@ -8,6 +8,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"gopkg.in/yaml.v2"
 	"os"
+	"regexp"
 )
 
 const (
@@ -72,8 +73,24 @@ func plainTextAll(imgs []docker.APIImages) error {
 	return nil
 }
 
-func checkMultiEncFlag(jsonFlag bool, yamlFlag bool, textFlag bool) bool {
-	if (jsonFlag && !yamlFlag && !textFlag) || (!jsonFlag && yamlFlag && !textFlag) || (!jsonFlag && !yamlFlag && textFlag) || (!jsonFlag && !yamlFlag && !textFlag) {
+// ImageTimeStamp can be useful to collect the age of old images on
+// node caches.
+func imageTimeStamp(imgs []docker.APIImages) map[string]int64 {
+	imgTSMap := make(map[string]int64)
+	// We don't want the hash algorithm info here
+	pattern, _ := regexp.Compile("sha256:")
+	for _, img := range imgs {
+		cleanID := pattern.ReplaceAllString(img.ID, "")
+		imgTSMap[cleanID] = img.Created
+	}
+	return imgTSMap
+}
+
+func checkMultiEncFlag(jsonFlag bool, yamlFlag bool, textFlag bool, imgAgeFlag bool) bool {
+	if (jsonFlag && !yamlFlag && !textFlag && !imgAgeFlag) ||
+		(!jsonFlag && yamlFlag && !textFlag && !imgAgeFlag) ||
+		(!jsonFlag && !yamlFlag && textFlag && !imgAgeFlag) ||
+		(!jsonFlag && !yamlFlag && !textFlag && imgAgeFlag) {
 		return false
 	} else {
 		return true
@@ -86,6 +103,7 @@ func main() {
 	yamlON := flag.Bool("yaml", false, "Use YAML encondig")
 	textON := flag.Bool("text", false, "Output the result in plain text")
 	helpON := flag.Bool("help", false, "Print a more detailed help")
+	imgAgeON := flag.Bool("age", false, "Print age of images in Unix epoch")
 
 	flag.Parse()
 
@@ -95,7 +113,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if checkMultiEncFlag(*jsonON, *yamlON, *textON) {
+	if checkMultiEncFlag(*jsonON, *yamlON, *textON, *imgAgeON) {
 		fmt.Println("Error: The program does not support more than one encoding flag")
 		os.Exit(1)
 	}
@@ -136,7 +154,7 @@ func main() {
 	}
 
 	// We want text to be the default output format
-	if *textON || (!*jsonON && !*yamlON && !*textON) {
+	if *textON || (!*jsonON && !*yamlON && !*textON && !*imgAgeON) {
 		err := plainTextAll(imgs)
 		if err != nil {
 			fmt.Println(err)
@@ -145,4 +163,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *imgAgeON {
+		imgAgeMap := imageTimeStamp(imgs)
+		fmt.Printf("IMAGE ID\t\t\t\t\t\t\t  AGE\n")
+		for id, epoch := range imgAgeMap {
+			fmt.Printf("%s  %d\n", id, epoch)
+		}
+	}
 }
